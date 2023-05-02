@@ -13,8 +13,11 @@ class Token:
     kind: TokenKind
     text: str
 
+    def __repr__(self) -> str:
+        return f"{self.kind}({self.text})"
 
-class LexError(Exception):
+
+class LexingError(Exception):
     def __init__(self, message: str = "unrecognized token") -> None:
         super().__init__(message)
 
@@ -53,5 +56,5 @@ class Lexer:
             elif self.current.isspace():
                 self.advance()
             else:
-                raise LexError(f"unrecognized token {self.current}")
+                raise LexingError(f"unrecognized token {self.current}")
         return tokens

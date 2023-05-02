@@ -1,1 +1,2 @@
-expr: NUMBER (PLUS NUMBER)*
+binop: PLUS
+expr:  NUMBER (binop NUMBER)*
