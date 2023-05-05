@@ -1,5 +1,5 @@
-import dataclasses
 import enum
+from dataclasses import dataclass
 from enum import Enum
 
 
@@ -8,53 +8,24 @@ class TokenKind(Enum):
     PLUS = enum.auto()
 
 
-@dataclasses.dataclass
+@dataclass
 class Token:
     kind: TokenKind
     text: str
 
     def __repr__(self) -> str:
-        return f"{self.kind}({self.text})"
+        return f"{self.kind.name}({self.text})"
 
 
-class LexingError(Exception):
-    def __init__(self, message: str = "unrecognized token") -> None:
-        super().__init__(message)
-
-
-class Lexer:
-    def __init__(self, code: str) -> None:
-        self.code = code
-        self.index = 0
-        self.current: str | None = self.code[self.index]
-
-    def advance(self) -> None:
-        self.index += 1
-        if self.index < len(self.code):
-            self.current = self.code[self.index]
-            return
-        self.current = None
-
-    def number(self) -> Token:
-        digits: list[str] = []
-        while self.current is not None and self.current.isdigit():
-            digits.append(self.current)
-            self.advance()
-        return Token(TokenKind.NUMBER, "".join(digits))
-
-    def plus(self) -> Token:
-        self.advance()
-        return Token(TokenKind.PLUS, "+")
-
-    def tokens(self) -> list[Token]:
-        tokens: list[Token] = []
-        while self.current is not None:
-            if self.current.isdigit():
-                tokens.append(self.number())
-            elif self.current == "+":
-                tokens.append(self.plus())
-            elif self.current.isspace():
-                self.advance()
-            else:
-                raise LexingError(f"unrecognized token {self.current}")
-        return tokens
+def lex(text: str) -> list[Token]:
+    tokens: list[Token] = []
+    for offset, character in enumerate(text, start=1):
+        if character.isdigit():
+            tokens.append(Token(TokenKind.NUMBER, character))
+        elif character == "+":
+            tokens.append(Token(TokenKind.PLUS, character))
+        elif character.isspace():
+            pass
+        else:
+            raise SyntaxError("invalid syntax", ("stdin", 1, offset, text))
+    return tokens

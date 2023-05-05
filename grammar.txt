@@ -1,2 +1,0 @@
-binop: PLUS
-expr:  NUMBER (binop NUMBER)*
