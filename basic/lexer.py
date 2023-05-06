@@ -5,7 +5,8 @@ from typing import Optional
 
 
 class TokenKind(Enum):
-    NUMBER = enum.auto()
+    EOF = enum.auto()
+    INTEGER = enum.auto()
     PLUS = enum.auto()
 
 
@@ -13,6 +14,7 @@ class TokenKind(Enum):
 class Token:
     kind: TokenKind
     text: str
+    start: int
 
     def __repr__(self) -> str:
         return f"{self.kind.name}({self.text})"
@@ -39,7 +41,7 @@ class Lexer:
         else:
             self.current = None
 
-    def number(self) -> str:
+    def integer(self) -> str:
         next = self.current
         digits: list[str] = []
         while next is not None and next.isdigit():
@@ -55,12 +57,12 @@ def lex(text: str) -> list[Token]:
     tokens: list[Token] = []
     while lexer.current is not None:
         if lexer.current.isdigit():
-            tokens.append(Token(TokenKind.NUMBER, lexer.number()))
+            tokens.append(Token(TokenKind.INTEGER, lexer.integer(), lexer.index + 1))
         elif lexer.current == "+":
-            tokens.append(Token(TokenKind.PLUS, lexer.current))
+            tokens.append(Token(TokenKind.PLUS, lexer.current, lexer.index + 1))
         elif lexer.current.isspace():
             pass
         else:
-            raise SyntaxError("invalid syntax", ("stdin", 1, lexer.index + 1, text))
+            raise SyntaxError(f"stray '{lexer.current}' in program", (None, None, lexer.index + 1, None))
         lexer.advance()
     return tokens
