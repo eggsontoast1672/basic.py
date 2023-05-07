@@ -1,32 +1,48 @@
+import abc
 import dataclasses
 import textwrap
+from abc import ABC
 from typing import Union
 
 from lexer import Token, TokenKind
 
 
+class Node(ABC):
+    @abc.abstractmethod
+    def visit(self) -> None:
+        pass
+
+
 @dataclasses.dataclass
-class NumberNode:
+class NumberNode(Node):
     value: Token
 
     def __repr__(self) -> str:
         return repr(self.value)
 
+    def visit(self) -> None:
+        print("Found number node!")
+
 
 @dataclasses.dataclass
-class BinaryOperationNode:
+class BinaryOperationNode(Node):
     left: Union[NumberNode, "BinaryOperationNode"]
     right: NumberNode
     operator: Token
 
     def __repr__(self) -> str:
         return textwrap.dedent(f"""\
-            BINARY_OPERATION(
+            {self.operator} {{
                 {self.left},
-                {self.operator},
                 {self.right}
-            )\
+            }}\
         """)
+
+    def visit(self) -> None:
+        print("Found binary operation node!")
+
+        self.left.visit()
+        self.right.visit()
 
 
 class Parser:
@@ -46,7 +62,7 @@ class Parser:
 
     def number(self) -> NumberNode:
         if self.current is None:
-            raise SyntaxError(f"reached <EOF> while searching for {TokenKind.INTEGER}")
+            raise SyntaxError(f"reached <EOF> while searching for <{TokenKind.INTEGER.name}>")
         if self.current.kind != TokenKind.INTEGER:
             raise SyntaxError(f"encountered unexpected token <{self.current}>", (None, None, self.current.start, None))
         return NumberNode(self.current)

@@ -1,5 +1,6 @@
 import pprint
 
+import interpreter
 import lexer
 import parser
 
@@ -15,14 +16,25 @@ def print_traceback(text: str, error: SyntaxError) -> None:
 def main() -> None:
     while True:
         code = input("> ")
+
+        print("\n=== Tokenization ===\n")
         try:
             tokens = lexer.lex(code)
-            ast = parser.parse(tokens)
         except SyntaxError as error:
             print_traceback(code, error)
             continue
         pprint.pprint(tokens)
+
+        print("\n=== Abstract Syntax Tree ===\n")
+        try:
+            ast = parser.parse(tokens)
+        except SyntaxError as error:
+            print_traceback(code, error)
+            continue
         pprint.pprint(ast)
+
+        print("\n=== Evaluated Expression ===\n")
+        print(interpreter.exec(ast))
 
 
 if __name__ == "__main__":
