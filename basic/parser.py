@@ -1,6 +1,6 @@
 import dataclasses
 import textwrap
-from typing import Optional
+from typing import Union
 
 from lexer import Token, TokenKind
 
@@ -14,14 +14,16 @@ class NumberNode:
 
 
 @dataclasses.dataclass
-class PlusNode:
-    left: NumberNode
+class BinaryOperationNode:
+    left: Union[NumberNode, "BinaryOperationNode"]
     right: NumberNode
+    operator: Token
 
     def __repr__(self) -> str:
         return textwrap.dedent(f"""\
-            PLUS(
+            BINARY_OPERATION(
                 {self.left},
+                {self.operator},
                 {self.right}
             )\
         """)
@@ -42,29 +44,26 @@ class Parser:
         else:
             self.current = None
 
-    def check_current_kind(self, expected: TokenKind) -> Token:
-        if self.current is None:
-            raise SyntaxError(f"expected <{expected.name}>, got <EOF>")
-        if self.current.kind != expected:
-            raise SyntaxError(f"expected <{expected.name}>, got <{self.current.kind.name}>", (None, None, self.current.start, None))
-        return self.current
-
     def number(self) -> NumberNode:
-        node = NumberNode(self.check_current_kind(TokenKind.INTEGER))
-        self.advance()
-        return node
-
-    def expression(self) -> PlusNode:
-        left = self.number()
-
-        self.check_current_kind(TokenKind.PLUS)
-        self.advance()
-
-        right = self.number()
-
-        return PlusNode(left, right)
+        if self.current is None:
+            raise SyntaxError(f"reached <EOF> while searching for {TokenKind.INTEGER}")
+        if self.current.kind != TokenKind.INTEGER:
+            raise SyntaxError(f"encountered unexpected token <{self.current}>", (None, None, self.current.start, None))
+        return NumberNode(self.current)
 
 
-def parse(tokens: list[Token]) -> Optional[PlusNode]:
-    tokens.append(Token(TokenKind.EOF, None))
-    return Parser(tokens).expression()
+def parse(tokens: list[Token]) -> Union[NumberNode, BinaryOperationNode]:
+    parser = Parser(tokens)
+
+    left = parser.number()
+    parser.advance()
+    while parser.current is not None:
+        if parser.current.kind not in (TokenKind.PLUS, TokenKind.MINUS):
+            raise SyntaxError(f"encountered unexpected token <{parser.current}>", (None, None, parser.current.start, None))
+        operator = parser.current
+        parser.advance()
+        right = parser.number()
+        left = BinaryOperationNode(left, right, operator)
+        parser.advance()
+
+    return left

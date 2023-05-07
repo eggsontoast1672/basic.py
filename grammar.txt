@@ -1,2 +1,1 @@
-number: INTEGER
-expression: number PLUS number
+expression: INTEGER (PLUS | MINUS) expression

@@ -1,22 +1,24 @@
+import dataclasses
 import enum
-from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
 
 
 class TokenKind(Enum):
-    EOF = enum.auto()
     INTEGER = enum.auto()
+    MINUS = enum.auto()
     PLUS = enum.auto()
 
 
-@dataclass
+@dataclasses.dataclass
 class Token:
     kind: TokenKind
-    text: str
+    text: Optional[str]
     start: int
 
     def __repr__(self) -> str:
+        if self.text is None:
+            return self.kind.name
         return f"{self.kind.name}({self.text})"
 
 
@@ -58,8 +60,10 @@ def lex(text: str) -> list[Token]:
     while lexer.current is not None:
         if lexer.current.isdigit():
             tokens.append(Token(TokenKind.INTEGER, lexer.integer(), lexer.index + 1))
+        elif lexer.current == "-":
+            tokens.append(Token(TokenKind.MINUS, None, lexer.index + 1))
         elif lexer.current == "+":
-            tokens.append(Token(TokenKind.PLUS, lexer.current, lexer.index + 1))
+            tokens.append(Token(TokenKind.PLUS, None, lexer.index + 1))
         elif lexer.current.isspace():
             pass
         else:
